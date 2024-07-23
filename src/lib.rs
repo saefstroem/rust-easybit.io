@@ -23,6 +23,8 @@ impl fmt::Display for EasyBit {
 pub enum Error {
     #[error("network error: {0}")]
     NetworkError(#[from] reqwest::Error),
+    #[error("JSON deserialization error: {0}")]
+    DeserializeError(#[from] serde_json::Error),
     #[error("{0}")]
     ApiError(EasyBit),
 }

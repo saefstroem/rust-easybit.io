@@ -1,6 +1,7 @@
 use crate::{client::Client, EasyBit, Error};
 use reqwest::StatusCode;
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Deserialize)]
 #[allow(non_snake_case)]
@@ -84,18 +85,18 @@ pub async fn get_currency_list(client: &Client) -> Result<Vec<Currency>, Error> 
         .send()
         .await?;
 
-    // If the response is not a 200, return an easybit error.
-    if response.status() != reqwest::StatusCode::OK {
-        let error: EasyBit = response.json().await?;
-        log::error!("EasyBit error: {:?}", error);
-        return Err(Error::ApiError(error));
+    let json: Value = response.json().await?;
+    match json.get("data") {
+        Some(data) => {
+            let currency_list: Vec<Currency> = serde_json::from_value(data.clone())?;
+            Ok(currency_list)
+        }
+        None => {
+            let error: EasyBit = serde_json::from_value(json)?;
+            log::error!("EasyBit error: {:?}", error);
+            return Err(Error::ApiError(error));
+        }
     }
-
-    // Convert the response to an object. Do not use unwrap.
-    let currency_list: Vec<Currency> = response.json().await?;
-
-    // Return the currency list.
-    Ok(currency_list)
 }
 
 pub async fn get_single_currency(client: &Client, currency: String) -> Result<Currency, Error> {
@@ -112,8 +113,18 @@ pub async fn get_single_currency(client: &Client, currency: String) -> Result<Cu
     match response.status() {
         StatusCode::OK => {
             // Convert the response to an object. Do not use unwrap.
-            let currency: Currency = response.json().await?;
-            Ok(currency)
+            let json: Value = response.json().await?;
+            match json.get("data") {
+                Some(data) => {
+                    let currency: Currency = serde_json::from_value(data.clone())?;
+                    Ok(currency)
+                }
+                None => {
+                    let error: EasyBit = serde_json::from_value(json)?;
+                    log::error!("EasyBit error: {:?}", error);
+                    return Err(Error::ApiError(error));
+                }
+            }
         }
         _ => {
             let error: EasyBit = response.json().await?;
@@ -137,8 +148,18 @@ pub async fn get_pair_list(client: &Client) -> Result<Vec<String>, Error> {
     match response.status() {
         StatusCode::OK => {
             // Convert the response to a Vec<String>
-            let pair_list: Vec<String> = response.json().await?;
-            Ok(pair_list)
+            let json: Value = response.json().await?;
+            match json.get("data") {
+                Some(data) => {
+                    let pair_list: Vec<String> = serde_json::from_value(data.clone())?;
+                    Ok(pair_list)
+                }
+                None => {
+                    let error: EasyBit = serde_json::from_value(json)?;
+                    log::error!("EasyBit error: {:?}", error);
+                    return Err(Error::ApiError(error));
+                }
+            }
         }
         _ => {
             let error: EasyBit = response.json().await?;
@@ -176,10 +197,18 @@ pub async fn get_pair_info(
 
     match response.status() {
         StatusCode::OK => {
-            // Convert the response to a general object that we can get values from using serde
-            
-
-            
+            let json: Value = response.json().await?;
+            match json.get("data") {
+                Some(data) => {
+                    let pair: Pair = serde_json::from_value(data.clone())?;
+                    Ok(pair)
+                }
+                None => {
+                    let error: EasyBit = serde_json::from_value(json)?;
+                    log::error!("EasyBit error: {:?}", error);
+                    return Err(Error::ApiError(error));
+                }
+            }
         }
         _ => {
             let error: EasyBit = response.json().await?;

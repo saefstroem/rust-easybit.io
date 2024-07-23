@@ -1,5 +1,6 @@
 use reqwest::StatusCode;
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::{client::Client, EasyBit, Error};
 
@@ -26,11 +27,18 @@ pub async fn get_account(client: &Client) -> Result<Account, Error> {
 
     match response.status() {
         StatusCode::OK => {
-            // Convert the response to an object. Do not use unwrap.
-            let account: Account = response.json().await?;
-
-            // Return the account object.
-            Ok(account)
+            let json: Value = response.json().await?;
+            match json.get("data") {
+                Some(data) => {
+                    let account: Account = serde_json::from_value(data.clone())?;
+                    Ok(account)
+                }
+                None => {
+                    let error: EasyBit = serde_json::from_value(json)?;
+                    log::error!("EasyBit error: {:?}", error);
+                    return Err(Error::ApiError(error));
+                }
+            }
         }
         _ => {
             let error: EasyBit = response.json().await?;
@@ -38,6 +46,8 @@ pub async fn get_account(client: &Client) -> Result<Account, Error> {
             return Err(Error::ApiError(error));
         }
     }
+
+    
 }
 
 pub async fn set_fee(client: &Client, fee: f64) -> Result<(), Error> {
