@@ -2,7 +2,7 @@ use zeroize::ZeroizeOnDrop;
 
 use crate::{
     account::{get_account, set_fee, Account},
-    currency::{get_currency_list, get_pair_list, get_single_currency, Currency},
+    currency::{get_currency_list, get_pair_info, get_pair_list, get_single_currency, Currency, Pair},
     Error,
 };
 
@@ -131,11 +131,18 @@ impl Client {
         get_pair_list(self).await
     }
 
-    pub async fn get_pair_info(&self, pair: String) -> String {
-        format!(
-            "GET {} with token {} and pair {}",
-            self.url, self.api_key, pair
-        )
+    /**
+    ### Retrieves information about a single currency pair from the API.
+    
+    **Parameters**
+    - `send`: Currency code for the currency to send
+    - `receive`: Currency code for the currency to receive
+    - `send_network`: Optional network code for the network to send on
+    - `receive_network`: Optional network code for the network to receive on
+    - `amount_type`: Optional amount type for if you want the amount parameter to be the amount of currency to receive. Set this to "receive" for this behavior.
+    */
+    pub async fn get_pair_info(&self, send:String,receive:String,send_network:Option<String>,receive_network:Option<String>,amount_type:Option<String>) -> Result<Pair,Error> {
+        get_pair_info(self, send, receive, send_network, receive_network, amount_type).await
     }
 
     pub async fn get_exchange_rate(&self) -> String {
