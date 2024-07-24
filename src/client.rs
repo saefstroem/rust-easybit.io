@@ -1,12 +1,7 @@
 use zeroize::ZeroizeOnDrop;
 
 use crate::{
-    account::{get_account, set_fee, Account},
-    currency::{
-        get_currency_list, get_exchange_rate, get_pair_info, get_pair_list, get_single_currency,
-        validate_address, Currency, ExchangeRate, Pair,
-    },
-    Error,
+    account::{get_account, set_fee, Account}, currency::{exchange_rate::{get_exchange_rate, ExchangeRate}, info::{get_currency_list, get_single_currency, Currency}, pair_info::{get_pair_info, Pair}, pair_list::get_pair_list, validate_address::validate_address}, Error
 };
 
 /**

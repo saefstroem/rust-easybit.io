@@ -1,10 +1,11 @@
 use serde::Deserialize;
 use thiserror::Error;
+use std::fmt;
 
 mod account;
-pub mod client;
 mod currency;
-use std::fmt;
+mod orders;
+pub mod client;
 
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
