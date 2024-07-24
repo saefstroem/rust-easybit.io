@@ -2,7 +2,10 @@ use zeroize::ZeroizeOnDrop;
 
 use crate::{
     account::{get_account, set_fee, Account},
-    currency::{get_currency_list, get_pair_info, get_pair_list, get_single_currency, Currency, Pair},
+    currency::{
+        get_currency_list, get_exchange_rate, get_pair_info, get_pair_list, get_single_currency,
+        validate_address, Currency, ExchangeRate, Pair,
+    },
     Error,
 };
 
@@ -24,6 +27,10 @@ impl Client {
 
     pub fn get_api_key(&self) -> String {
         self.api_key.clone()
+    }
+
+    pub fn get_url(&self) -> String {
+        self.url.clone()
     }
 
     /**
@@ -133,7 +140,7 @@ impl Client {
 
     /**
     ### Retrieves information about a single currency pair from the API.
-    
+
     **Parameters**
     - `send`: Currency code for the currency to send
     - `receive`: Currency code for the currency to receive
@@ -141,19 +148,78 @@ impl Client {
     - `receive_network`: Optional network code for the network to receive on
     - `amount_type`: Optional amount type for if you want the amount parameter to be the amount of currency to receive. Set this to "receive" for this behavior.
     */
-    pub async fn get_pair_info(&self, send:String,receive:String,send_network:Option<String>,receive_network:Option<String>,amount_type:Option<String>) -> Result<Pair,Error> {
-        get_pair_info(self, send, receive, send_network, receive_network, amount_type).await
-    }
-
-    pub async fn get_exchange_rate(&self) -> String {
-        format!("GET {} with token {}", self.url, self.api_key)
-    }
-
-    pub async fn validate_address(&self, address: String) -> String {
-        format!(
-            "POST {} with token {} and address {}",
-            self.url, self.api_key, address
+    pub async fn get_pair_info(
+        &self,
+        send: String,
+        receive: String,
+        send_network: Option<String>,
+        receive_network: Option<String>,
+        amount_type: Option<String>,
+    ) -> Result<Pair, Error> {
+        get_pair_info(
+            self,
+            send,
+            receive,
+            send_network,
+            receive_network,
+            amount_type,
         )
+        .await
+    }
+
+    /**
+    ### Retrieves the exchange rate for a currency pair from the API.
+
+    **Parameters**
+    - `send`: Currency code for the currency to send
+    - `receive`: Currency code for the currency to receive
+    - `amount`: Amount of currency to send
+    - `send_network`: Optional network code for the network to send on
+    - `receive_network`: Optional network code for the network to receive on
+    - `amount_type`: Optional amount type for if you want the amount parameter to be the amount of currency to receive. Set this to "receive" for this behavior.
+    - `extra_fee_override`: Optional extra fee override for the exchange rate, useful for discounts or promotions.
+    */
+    #[allow(clippy::too_many_arguments)]
+    pub async fn get_exchange_rate(
+        &self,
+        send: String,
+        receive: String,
+        amount: f64,
+        send_network: Option<String>,
+        receive_network: Option<String>,
+        amount_type: Option<String>,
+        extra_fee_override: Option<f64>,
+    ) -> Result<ExchangeRate, Error> {
+        get_exchange_rate(
+            self,
+            send,
+            receive,
+            amount,
+            send_network,
+            receive_network,
+            amount_type,
+            extra_fee_override,
+        )
+        .await
+    }
+
+    /**
+    ### Validates an address for a currency from the API.
+
+    **Parameters**
+    - `currency`: Currency code for the currency to validate
+    - `address`: Address to validate
+    - `network`: Optional network code for the network to validate on
+    - `tag`: Optional tag for the address
+     */
+    pub async fn validate_address(
+        &self,
+        currency: String,
+        address: String,
+        network: Option<String>,
+        tag: Option<String>,
+    ) -> Result<(), Error> {
+        validate_address(self, currency, address, network, tag).await
     }
 
     pub async fn place_order(&self, pair: String, side: String, price: f64, amount: f64) -> String {

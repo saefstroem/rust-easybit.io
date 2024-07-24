@@ -29,5 +29,5 @@ pub enum Error {
     ApiError(EasyBit),
 }
 
-#[cfg(test)]
-mod tests {}
+
+
