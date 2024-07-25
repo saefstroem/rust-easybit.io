@@ -1,7 +1,14 @@
 [package]
 name = "easybit"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
+license = "MIT"
+keywords = ["cryptocurrency", "exchange", "easybit", "swap"]
+categories = ["api-bindings"]
+exclude = ["test.sh"]
+description = "A wrapper library to easily work with the easybit.io exchange API"
+repository = "https://github.com/starkbamse/rust-easybit.io"
+
 
 [dependencies]
 env_logger = "0.11.4"
