@@ -1,6 +1,8 @@
 # rust-easybit.io - Rust library for easybit.io exchange API.
 This is a Rust library for the easybit.io exchange API. It is a work in progress and is not all functionalities are ready for production use **(KYC enforcement, order refunds)**. It was created to simplify my collaboration as a partner with easybit.io. I decided that contributing to the Rust community would be a good way to give back.
 
+The `Client` struct implements `ZeroizeOnDrop` which shall overwrite the memory of where Client is stored when it goes out of scope. This is to prevent any sensitive information from being leaked on the heap. Thanks to the `zeroize` crate for this.
+
 That being said, this is not an official library and is not endorsed by easybit.io. Therefore, **use it at your own risk**. I am not responsible for any loss of funds or any other damages that may occur from using this library. Please ensure that you have read and understood the easybit.io API documentation before using this library, as well as the source code.
 
 If you have any questions, please feel free to open an issue.

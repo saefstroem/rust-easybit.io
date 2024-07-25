@@ -6,7 +6,7 @@ license = "MIT"
 keywords = ["cryptocurrency", "exchange", "easybit", "swap"]
 categories = ["api-bindings"]
 exclude = ["test.sh"]
-description = "A wrapper library to easily work with the easybit.io exchange API"
+description = "A library for seamless integration with the Easybit.io API"
 repository = "https://github.com/starkbamse/rust-easybit.io"
 
 
