@@ -6,7 +6,9 @@ use crate::{client::Client, EasyBit, Error};
 
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
-/*
+/**
+    ### Exchange rate information.
+
     - `rate`: Exchange rate
     - `sendAmount`: Amount to send
     - `receiveAmount`: Amount to receive

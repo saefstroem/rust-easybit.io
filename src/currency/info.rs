@@ -7,6 +7,8 @@ use crate::{client::Client, EasyBit, Error};
 #[derive(Deserialize, Debug, Clone)]
 #[allow(non_snake_case)]
 /**
+    ### Currency information.
+    
     - `currency`: Currency code
     - `name`: Currency name
     - `sendStatusAll`: If the system can send this currency through at least one network

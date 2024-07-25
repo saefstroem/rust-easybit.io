@@ -5,7 +5,9 @@ use serde_json::Value;
 
 #[derive(Deserialize, Debug)]
 #[allow(non_snake_case)]
-/*
+/**
+    ### Pair information.
+
     - `minimumAmount`: Minimum amount that can be sent
     - `maximumAmount`: Maximum amount that can be sent
     - `networkFee`: Network fee

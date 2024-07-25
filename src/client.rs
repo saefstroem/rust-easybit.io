@@ -1,29 +1,54 @@
 use zeroize::ZeroizeOnDrop;
 
 use crate::{
-    account::{get_account, set_fee, Account}, currency::{exchange_rate::{get_exchange_rate, ExchangeRate}, info::{get_currency_list, get_single_currency, Currency}, pair_info::{get_pair_info, Pair}, pair_list::get_pair_list, validate_address::validate_address}, Error
+    account::{get_account, set_fee},
+    currency::{
+        exchange_rate::get_exchange_rate,
+        info::{get_currency_list, get_single_currency},
+        pair_info::get_pair_info,
+        pair_list::get_pair_list,
+        validate_address::validate_address,
+    },
+    kyc::update::Proof,
+    orders::{all::all_orders, create::create_order, status::order_status},
+    Error,
 };
 
-/**
- # Easybit.io API client.
- ### Uses reqwest for HTTP requests.
- ### Fully asynchronous.
-*/
+pub use crate::account::Account;
+pub use crate::currency::exchange_rate::ExchangeRate;
+pub use crate::currency::info::Currency;
+pub use crate::currency::pair_info::Pair;
+pub use crate::orders::all::Summary;
+pub use crate::orders::create::{Network, Order, Transaction, User};
+pub use crate::orders::status::Status;
+
 #[derive(ZeroizeOnDrop)]
+/**
+ * **Client for interacting with the easybit.io API.**
+ */
 pub struct Client {
     url: String,
     api_key: String,
 }
 
 impl Client {
+    /**
+     * Create new client with the given URL and API key.
+     */
     pub fn new(url: String, api_key: String) -> Client {
         Client { url, api_key }
     }
 
+    /**
+     * Get the API key.
+     */
     pub fn get_api_key(&self) -> String {
         self.api_key.clone()
     }
 
+    /**
+     * Get the URL.
+     */
     pub fn get_url(&self) -> String {
         self.url.clone()
     }
@@ -217,49 +242,102 @@ impl Client {
         validate_address(self, currency, address, network, tag).await
     }
 
-    pub async fn place_order(&self, pair: String, side: String, price: f64, amount: f64) -> String {
-        format!(
-            "POST {} with token {} and order {} {} {} {}",
-            self.url, self.api_key, pair, side, price, amount
-        )
+    /**
+    ### Places an order with the API.
+
+    **Parameters**
+    - `transaction`: Transaction information
+    - `user`: User information
+    - `network`: Network information
+    */
+    pub async fn place_order(
+        &self,
+        transaction: Transaction,
+        user: User,
+        network: Network,
+    ) -> Result<Order, Error> {
+        create_order(self, transaction, user, network).await
     }
 
-    pub async fn get_order_status(&self, order_id: String) -> String {
-        format!(
-            "GET {} with token {} and order_id {}",
-            self.url, self.api_key, order_id
-        )
+    /**
+    ### Retrieves the status of an order from the API.
+
+    **Parameters**
+    - `order_id`: Unique Order ID
+     */
+    pub async fn get_order_status(&self, order_id: String) -> Result<Status, Error> {
+        order_status(self, order_id).await
     }
 
-    pub async fn get_all_orders(&self) -> String {
-        format!("GET {} with token {}", self.url, self.api_key)
+    /**
+    ### Retrieves all orders from the API.
+
+    **Parameters**
+    - `id`: Optional Order ID
+    - `limit`: Optional limit for the number of orders to return
+    - `date_from`: Optional date to start from
+    - `date_to`: Optional date to end at
+    - `sort_direction`: Optional sort direction DESC or ASC
+    - `status`: Optional status to filter by "Awaiting Deposit" or "Confirming Deposit" or "Exchanging" or "Sending" or "Complete" or "Refund" or "Failed" or "Volatility Protection" or "Action Request" or "Request Overdue"
+        - `Awaiting Deposit`: The order is awaiting a deposit.
+        - `Confirming Deposit`: The order is confirming the deposit.
+        - `Exchanging`: The order is exchanging the currency.
+        - `Sending`: The order is sending the currency.
+        - `Complete`: The order is complete.
+        - `Refund`: The order is refunding the currency.
+        - `Failed`: The order has failed.
+        - `Volatility Protection`: The VPM was triggered, leading to a refund.
+        - `Action Request`: The order requires KYC/AML action.
+        - `Request Overdue`: The order has not been completed in time.
+     */
+    pub async fn get_all_orders(
+        &self,
+        id: Option<String>,
+        limit: Option<String>,
+        date_from: Option<String>,
+        date_to: Option<String>,
+        sort_direction: Option<String>,
+        status: Option<String>,
+    ) -> Result<Vec<Summary>, Error> {
+        all_orders(self, id, limit, date_from, date_to, sort_direction, status).await
     }
 
-    pub async fn update_order_premium(&self, order_id: String, premium: f64) -> String {
-        format!(
-            "POST {} with token {} and order_id {} and premium {}",
-            self.url, self.api_key, order_id, premium
-        )
+    /**
+    ### Updates the KYC information for an order that requires KYC validation.
+    *This function is not available at the moment due to lack of testing possibilities.*
+
+    **Note: If a customer does not want to provide KYC information, you can refund the order.**
+
+    **Parameters**
+    - `proof`: KYC proof information
+     */
+    pub async fn update_order_kyc(&self, _proof: Proof) {
+        todo!("Limited ways to test current implementation. Wait for future updates.");
+        // update_kyc(self, proof).await;
     }
 
-    pub async fn pause_order_premium(&self, order_id: String) -> String {
-        format!(
-            "POST {} with token {} and order_id {}",
-            self.url, self.api_key, order_id
-        )
-    }
+    /**
+    ### Refunds an order that requires KYC validation.
+    *This function is not available at the moment due to lack of testing possibilities.*
 
-    pub async fn resume_order_premium(&self, order_id: String) -> String {
-        format!(
-            "POST {} with token {} and order_id {}",
-            self.url, self.api_key, order_id
-        )
-    }
+    **Parameters**
+    - `order_id`: Unique Order ID
+    - `refund_address`: Address to refund to
+    - `refund_tag`: Optional tag to refund to
 
-    pub async fn refund_order_premium(&self, order_id: String) -> String {
-        format!(
-            "POST {} with token {} and order_id {}",
-            self.url, self.api_key, order_id
-        )
+    ### To be able to refund the order the following conditions should be met:
+
+    1. The order "status" is "Action Request".
+    2. The order "validationStatus" has any of the following values: null, "awaiting", "failed_allow_retry", "failed_deny_retry"
+
+     */
+    pub async fn refund_order(
+        &self,
+        _order_id: String,
+        _refund_address: String,
+        _refund_tag: Option<String>,
+    ) {
+        todo!("Limited ways to test current implementation. Wait for future updates.");
+        // refund(self, order_id, refund_address, refund_tag).await;
     }
 }

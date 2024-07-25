@@ -6,6 +6,15 @@ use crate::{client::Client, EasyBit, Error};
 
 #[derive(Debug, Deserialize)]
 #[allow(non_snake_case)]
+/**
+    ### Account information.
+    
+    - `level`: Account level
+    - `volume`: Your volume in USDT in the last month
+    - `fee`: EasyBit's fee
+    - `extraFee`: Your extra fee that you set
+    - `totalFee`: Total fee for your customer
+ */
 pub struct Account {
     pub level: i32,
     pub volume: String,
